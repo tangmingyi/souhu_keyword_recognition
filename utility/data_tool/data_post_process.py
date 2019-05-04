@@ -4,6 +4,7 @@ import collections
 from tqdm import tqdm
 from utility.data_tool import from_txt_get_data
 import os
+import numpy as np
 
 class PostProcessTool():
     @staticmethod
@@ -275,6 +276,8 @@ class PostProcessTool():
     def _new_merge(dic):
         pass
 
+
+
     @staticmethod
     def from_bert_key_work_extract_get_res_to_txt_sord_and_clearn_them(model_output_file_base, out_file,
                                                                        raw_data_file_about_model_used,
@@ -352,3 +355,116 @@ class PostProcessTool():
                     #     "3\t" + title + "\n"
                     # )
                     # print("结果少于3个数为：{}".format(len(core_lt)))
+
+    @staticmethod
+    def get_finally_res(extract_keywork_file, submission_output_file_base, write_file):
+        sub_res = {}
+        with open(extract_keywork_file, "r", encoding="utf-8") as rf:
+            count = 0
+            for line in rf:
+                temp = line.strip().split("\t")
+                sub_res[temp[0]] = temp[1].split("*|||*")
+                if len(sub_res[temp[0]]) != 20:
+                    mm = len(sub_res[temp[0]])
+                    for _ in range(20 - len(sub_res[temp[0]])):
+                        sub_res[temp[0]].append("[PAD]")
+                    count += 1
+                    print("count:{},len:{}".format(count, mm))
+
+        wf = open(write_file, "w", encoding="utf-8")
+        file_names = os.listdir(submission_output_file_base)
+        for file_name in file_names:
+            file_name = os.path.join(submission_output_file_base, file_name)
+            with open(file_name, "r", encoding="utf-8") as rf:
+                for line in rf:
+                    temp = line.strip().split("\t")
+                    tempa = [j[1] for j in
+                             sorted([(i, index) for index, i in enumerate([float(mm) for mm in temp[1].split(",")]) if
+                                     i >= 0.5],
+                                    key=lambda x: x[0], reverse=True)]
+                    if len(tempa) == 0:
+                        temp[1] = [j[1] for j in
+                                   sorted(
+                                       [(i, index) for index, i in enumerate([float(mm) for mm in temp[1].split(",")])],
+                                       key=lambda x: x[0], reverse=True)[:3]]
+                    else:
+                        temp[1] = tempa
+                    # try:
+                    res_lt = [sub_res[temp[0]][i] for i in temp[1] if sub_res[temp[0]][i] != "[PAD]"]
+                    wf.write(temp[0] + "\t" + "*|||*".join(res_lt) + "\n")
+                    # except Exception as e:
+                    #     print(e)
+            # wf.close()
+
+    @staticmethod
+    def f1score(res_file, label_file):
+        res_dic = {}
+        with open(res_file, "r", encoding="utf-8") as rf:
+            for line in rf:
+                temp = line.strip().split("\t")
+                res_dic[temp[0]] = {"res": temp[1].split("*|||*")}
+        with open(label_file, "r", encoding="utf-8") as rf:
+            for line in rf:
+                temp = line.strip().split("\t")
+                res_dic[temp[0]]["label"] = temp[1].split("*|||*")
+        score = []
+        for id, data in res_dic.items():
+            right_num = 0
+            for res in data["res"]:
+                if res in data["label"]:
+                    right_num += 1
+            one_score = right_num / len(data["label"])
+            score.append(one_score)
+        final_score = np.array(score).mean()
+        print(score)
+        print(final_score)
+
+    @staticmethod
+    def merge_core_emotion_finally(core_file,extract_kw_raw_output_base,emotion_file_base,writer_file):
+        res_dic = {}
+        with open(core_file, "r", encoding="utf-8")as rf:
+            extract_kw_names = os.listdir(extract_kw_raw_output_base)
+            for extract_kw_name in extract_kw_names:
+                extract_kw_name = os.path.join(extract_kw_raw_output_base,extract_kw_name)
+                nbest_dic = collections.defaultdict(list)
+                nbest_json = json.load(open(extract_kw_name, "r", encoding="utf-8"))
+                print(extract_kw_name)
+                for k, v in tqdm(nbest_json.items()):
+                    nbest_dic[k[:8]].append({k: [i["text"] for i in v]})
+                for line in rf:
+                    tempa = line.strip().split("\t")
+                    dic_pos = []
+                    for core in tempa[1].split("*|||*"):
+                        if "," in core:
+                            continue
+                        core_post = []
+                        for i in nbest_dic[tempa[0]]:
+                            for k, v in i.items():
+                                if " ".join(list(core)) in v:
+                                    core_post.append(k)
+                        dic_pos.append({core: core_post})
+                    res_dic[tempa[0]] = dic_pos
+        emotion_dic = {}
+        num2emotion = {0: "POS", 1: "NORM", 2: "NEG"}
+        emotion_names = os.listdir(emotion_file_base)
+        for emotion_name in emotion_names:
+            emotion_name = os.path.join(emotion_file_base,emotion_name)
+            with open(emotion_name, "r", encoding="utf-8") as rf:
+                print(emotion_name)
+                for line in tqdm(rf):
+                    temp = json.loads(line)
+                    emotion_dic[temp["new_id"]] = temp["emotion"]
+        final_res = collections.defaultdict(list)
+        print("finaly result")
+        for k, v in tqdm(res_dic.items()):
+            for i in v:
+                key, value = [mm for mm in i.items()][0]
+                emotion_score = np.array([0, 0, 0])
+                for j in value:
+                    emotion_lt = np.array(emotion_dic[j])
+                    emotion_score = emotion_score + emotion_lt
+                final_res[k].append((key, num2emotion[np.argmax(emotion_score)]))
+        with open(writer_file, "w", encoding="utf-8") as wf:
+            print("begin writer")
+            for k, v in tqdm(final_res.items()):
+                wf.write(k + "\t" + ",".join([i[0] for i in v]) + "\t" + ",".join([i[1] for i in v]) + "\n")
