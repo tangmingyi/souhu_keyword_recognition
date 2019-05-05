@@ -38,40 +38,40 @@ from utility.data_tool.from_txt_get_data import data_util
 flags = tf.flags
 
 FLAGS = flags.FLAGS
-
+run_config = json.load(open("config_file/run_sub_mission_config.json","r",encoding="utf-8"))
 ## Required parameters
 flags.DEFINE_string(
-    "bert_config_file", "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_config.json",
+    "bert_config_file", run_config["bert_config_file"],
     "The config json file corresponding to the pre-trained BERT model. "
     "This specifies the model architecture.")
 
-flags.DEFINE_string("vocab_file", "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\vocab.txt",
+flags.DEFINE_string("vocab_file", run_config["vocab_file"],
                     "The vocabulary file that the BERT model was trained on.")
 
 flags.DEFINE_string(
     # "output_dir", "D:\\programing\\souhumodel\\BERT_core_match",
-    "output_dir", "res",
+    "output_dir", run_config["output_dir"],
     "The output directory where the model checkpoints will be written.")
 
 ## Other parameters
-flags.DEFINE_string("train_file", "data/souhu/train.txt",
+flags.DEFINE_string("train_file", run_config["train_file"],
                     "SQuAD json for training. E.g., train-v1.1.json")
 
 flags.DEFINE_string(
-    "predict_file", "data/souhu/dev.txt",
+    "predict_file", run_config["predict_file"],
     "SQuAD json for predictions. E.g., dev-v1.1.json or test-v1.1.json")
 
 flags.DEFINE_string(
-    "init_checkpoint", "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_model.ckpt",
+    "init_checkpoint", run_config["init_checkpoint"],
     "Initial checkpoint (usually from a pre-trained BERT model).")
 
 flags.DEFINE_bool(
-    "do_lower_case", True,
+    "do_lower_case", run_config["do_lower_case"]=="True",
     "Whether to lower case the input text. Should be True for uncased "
     "models and False for cased models.")
-flags.DEFINE_bool("reload_data", True, "是否重新加载数据并生成tfrecord文件")
+flags.DEFINE_bool("reload_data", run_config["reload_data"]=="True", "是否重新加载数据并生成tfrecord文件")
 flags.DEFINE_integer(
-    "max_seq_length", 512,
+    "max_seq_length", run_config["max_seq_length"],
     "The maximum total input sequence length after WordPiece tokenization. "
     "Sequences longer than this will be truncated, and sequences shorter "
     "than this will be padded.")
@@ -82,42 +82,42 @@ flags.DEFINE_integer(
     "take between chunks.")
 
 flags.DEFINE_integer(
-    "max_query_length", 80,
+    "max_query_length", run_config["max_query_length"],
     "The maximum number of tokens for the question. Questions longer than "
     "this will be truncated to this length.")
 
-flags.DEFINE_bool("do_train", False, "Whether to run training.")
+flags.DEFINE_bool("do_train", run_config["do_train"]=="True", "Whether to run training.")
 
-flags.DEFINE_bool("do_predict", True, "Whether to run eval on the dev set.")
+flags.DEFINE_bool("do_predict", run_config["do_predict"]=="True", "Whether to run eval on the dev set.")
 
-flags.DEFINE_integer("train_batch_size", 2, "Total batch size for training.")
+flags.DEFINE_integer("train_batch_size", run_config["train_batch_size"], "Total batch size for training.")
 
-flags.DEFINE_integer("predict_batch_size", 8,
+flags.DEFINE_integer("predict_batch_size", run_config["predict_batch_size"],
                      "Total batch size for predictions.")
 
-flags.DEFINE_float("learning_rate", 5e-5, "The initial learning rate for Adam.")
+flags.DEFINE_float("learning_rate", run_config["learning_rate"], "The initial learning rate for Adam.")
 
-flags.DEFINE_float("num_train_epochs", 3.0,
+flags.DEFINE_float("num_train_epochs", run_config["num_train_epochs"],
                    "Total number of training epochs to perform.")
 
 flags.DEFINE_float(
-    "warmup_proportion", 0.1,
+    "warmup_proportion", run_config["warmup_proportion"],
     "Proportion of training to perform linear learning rate warmup for. "
     "E.g., 0.1 = 10% of training.")
 
-flags.DEFINE_integer("save_checkpoints_steps", 300,
+flags.DEFINE_integer("save_checkpoints_steps", run_config["save_checkpoints_steps"],
                      "How often to save the model checkpoint.")
 
-flags.DEFINE_integer("iterations_per_loop", 1000,
+flags.DEFINE_integer("iterations_per_loop", run_config["iterations_per_loop"],
                      "How many steps to make in each estimator call.")
 
 flags.DEFINE_integer(
-    "n_best_size", 20,
+    "n_best_size", run_config["n_best_size"],
     "The total number of n-best predictions to generate in the "
     "nbest_predictions.json output file.")
 
 flags.DEFINE_integer(
-    "max_answer_length", 10,
+    "max_answer_length", run_config["max_answer_length"],
     "The maximum length of an answer that can be generated. This is needed "
     "because the start and end predictions are not conditioned on one another.")
 
@@ -263,24 +263,16 @@ class sohudata():
                 self.entity_mon.append((dic["entity"].strip(), dic["emotion"].strip()))
 
 
-def read_squad_examples(input_file, is_training):
+def read_squad_examples(raw_data_file,extract_kw_fl, is_training):
     train_data = data_util()
-    if is_training:
-        souhu_file = "data/souhu/train.txt"
-        sub_file = "res/dev_sub.txt"
-    else:
-        souhu_file = "data/souhu/test.txt"
-        sub_file = "res/prediction10.txt"
-    train_data.get_souhu_data(souhu_file, is_training)
-    train_data.get_sub_res_data(sub_file, is_training, FLAGS.max_query_length)
+    train_data.get_souhu_data(raw_data_file, is_training)
+    train_data.get_sub_res_data(extract_kw_fl, is_training, FLAGS.max_query_length)
     if is_training:
         train_data.get_sub_train_data()
     else:
         train_data.get_sub_prediction_data()
     examples = []
     for index, data in enumerate(train_data.train_data):
-        # if index == 100:
-        #     break
         # data = train_data.train_data[10]
         example = SquadExample(
             qas_id=data.new_id,
@@ -1363,7 +1355,7 @@ def main(_):
     #             iterations_per_loop=FLAGS.iterations_per_loop,
     #             num_shards=FLAGS.num_tpu_cores,
     #             per_host_input_for_training=is_per_host))
-    run_config = tf.estimator.RunConfig(
+    tf_run_config = tf.estimator.RunConfig(
         model_dir=FLAGS.output_dir,
         tf_random_seed=None,
         save_summary_steps=10,
@@ -1383,7 +1375,7 @@ def main(_):
     if FLAGS.do_train:
         if FLAGS.reload_data:
             train_examples = read_squad_examples(
-                input_file=FLAGS.train_file, is_training=True)
+                raw_data_file=FLAGS.train_file,extract_kw_fl=run_config["extract_key_work2train"], is_training=True)
             num_train_steps = int(
                 len(train_examples) / FLAGS.train_batch_size * FLAGS.num_train_epochs)
             num_warmup_steps = int(num_train_steps * FLAGS.warmup_proportion)
@@ -1465,7 +1457,7 @@ def main(_):
     #     predict_batch_size=FLAGS.predict_batch_size)
     estimator = tf.estimator.Estimator(
         model_fn=model_fn,
-        config=run_config,
+        config=tf_run_config,
         params={"train_batch_size": FLAGS.train_batch_size,
                 "eval_batch_size": 128,
                 "predict_batch_size": FLAGS.predict_batch_size},  # params可以传给mofel_fn和input_fn
@@ -1539,7 +1531,7 @@ def main(_):
 
     if FLAGS.do_predict:
         eval_examples = read_squad_examples(
-            input_file=FLAGS.predict_file, is_training=False)
+            raw_data_file=FLAGS.predict_file,extract_kw_fl=run_config["extract_key_work2test"],is_training=False)
 
         eval_writer = FeatureWriter(
             filename=os.path.join(FLAGS.output_dir, "eval.tf_record"),
@@ -1579,7 +1571,7 @@ def main(_):
         # If running eval on the TPU, you will need to specify the number of
         # steps.
         all_results = []
-        wf = open("res/result.txt","w",encoding="utf-8")
+        wf = open(run_config["sub_mission_res_file"],"w",encoding="utf-8")
         for mm,result in enumerate(estimator.predict(
                 predict_input_fn, yield_single_examples=True
                 # ,hooks=[tf_debug.LocalCLIDebugHook(ui_type="readline")]
