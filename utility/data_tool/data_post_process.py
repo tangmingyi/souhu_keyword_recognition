@@ -277,7 +277,6 @@ class PostProcessTool():
         pass
 
 
-
     @staticmethod
     def from_bert_key_work_extract_get_res_to_txt_sord_and_clearn_them(model_output_file_base, out_file,
                                                                        raw_data_file_about_model_used,
@@ -301,8 +300,10 @@ class PostProcessTool():
                 # merge_title(sum_dic)
                 fuse_dic = sum_dic
                 for id, v in tqdm(fuse_dic.items()):
-                    # core = [i[0] for i in input_dic[id]["core_emo"]]
-                    core = ["PAD" for _ in range(3)]
+                    if raw_data_is_train:
+                        core = [i[0] for i in [data[0] for data in souhu_dic[id].entity_mon]]
+                    else:
+                        core = ["PAD" for _ in range(3)]
                     # title = input_dic[id]["title"]
                     # emotion = [i[1] for i in input_dic[id]]
 
@@ -342,7 +343,8 @@ class PostProcessTool():
                     wf.write(
                         #     "1\t" +
                         id + "\t" + "*|||*".join(core_lt) + "\t" + "*|||*".join(core_vote) + "\t" + "*|||*".join(
-                            core_max_score) + "\t" + "*|||*".join(para_index) + "\t" + "*|||*".join(len_para) + "\n")
+                            core_max_score) + "\t" + "*|||*".join(para_index) + "\t" + "*|||*".join(
+                            len_para) + "\t" + "*|||*".join(core) + "\n")
                     # wf.write(
                     # "1\t"+
                     # id + "\t" + "*|||*".join(core_lt) + "\t" + "*|||*".join(para_index) + "\t" + "*|||*".join(len_para) + "\t"+"*|||*".join(core) + "\t"+ "*|||*".join([str(i) for i in score])+ "\n")
@@ -357,7 +359,7 @@ class PostProcessTool():
                     # print("结果少于3个数为：{}".format(len(core_lt)))
 
     @staticmethod
-    def get_finally_res(extract_keywork_file, submission_output_file_base, write_file):
+    def get_core_res(extract_keywork_file, submission_output_file_base, write_file):
         sub_res = {}
         with open(extract_keywork_file, "r", encoding="utf-8") as rf:
             count = 0
@@ -420,12 +422,12 @@ class PostProcessTool():
         print(final_score)
 
     @staticmethod
-    def merge_core_emotion_finally(core_file,extract_kw_raw_output_base,emotion_file_base,writer_file):
+    def merge_core_emotion_finally(core_file, extract_kw_raw_output_base, emotion_file_base, writer_file):
         res_dic = {}
         with open(core_file, "r", encoding="utf-8")as rf:
             extract_kw_names = os.listdir(extract_kw_raw_output_base)
             for extract_kw_name in extract_kw_names:
-                extract_kw_name = os.path.join(extract_kw_raw_output_base,extract_kw_name)
+                extract_kw_name = os.path.join(extract_kw_raw_output_base, extract_kw_name)
                 nbest_dic = collections.defaultdict(list)
                 nbest_json = json.load(open(extract_kw_name, "r", encoding="utf-8"))
                 print(extract_kw_name)
@@ -448,7 +450,7 @@ class PostProcessTool():
         num2emotion = {0: "POS", 1: "NORM", 2: "NEG"}
         emotion_names = os.listdir(emotion_file_base)
         for emotion_name in emotion_names:
-            emotion_name = os.path.join(emotion_file_base,emotion_name)
+            emotion_name = os.path.join(emotion_file_base, emotion_name)
             with open(emotion_name, "r", encoding="utf-8") as rf:
                 print(emotion_name)
                 for line in tqdm(rf):
