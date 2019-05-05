@@ -155,7 +155,7 @@ class Tool():
                 if index % len_file == 0:
                     if i != 1:
                         wf.close()
-                    wf = open("{}{}.txt".format(os.path.join(output_file_base, input_file_name), i), "w",
+                    wf = open("{}{}.txt".format(os.path.join(output_file_base, input_file_name.split(".")[0]), i), "w",
                               encoding="utf-8")
                     i += 1
                 wf.write(line)
