@@ -1,0 +1,27 @@
+{
+  "bert_config_file": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_config.json",
+  "vocab_file": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\vocab.txt",
+  "init_checkpoint": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_model.ckpt",
+  "train_file": "data/raw_data/train.txt",
+  "predict_file": "data/raw_data/test.txt",
+  "extract_key_work2test": "data/res/res_extract_keyword2test.txt",
+  "extract_key_work2train": "data/res/res_extract_keyword2train.txt",
+  "sub_mission_res_file": "data/res/submission_output/result.txt",
+  "output_dir": "data/model/sub_mission_model",
+  "do_train": "True",
+  "do_predict": "True",
+  "reload_data": "True",
+  "do_lower_case": "True",
+  "max_seq_length": 512,
+  "max_query_length": 80,
+  "max_answer_length": 10,
+  "n_best_size":20,
+  "train_batch_size": 2,
+  "predict_batch_size": 8,
+  "learning_rate": 5e-5,
+  "num_train_epochs": 3.0,
+  "warmup_proportion": 0.1,
+  "save_checkpoints_steps":300,
+  "iterations_per_loop":1000
+
+}
