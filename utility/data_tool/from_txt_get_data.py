@@ -47,7 +47,7 @@ class sub_res_data():
                 continue
         if len(res_lt) == 0:
             tag = "bad_data"
-        if len(res_lt) > 450:
+        elif max(res_lt) > 450: #todo:这里写的不对，后期改为检测文本长度
             tag = "bad_data"
         return res_lt, tag
 
