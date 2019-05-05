@@ -30,8 +30,9 @@ class sub_res_data():
             print(e)
         self.len_paragraph = int(temp[5].split("*|||*")[0])
         self.score = [float(i) for i in temp[3].split("*|||*")]
+        self.vote_score = temp[2].split("*|||*")
         if istrain:
-            self.res = temp[2].split("*|||*")
+            self.res = temp[6].split("*|||*")
             self.res_point, self.tag = self._get_res_point()
             self.res_point = self._get_one_hot_labels()
         self.res_mark = self._get_predict_label_mark(max_query_length)
