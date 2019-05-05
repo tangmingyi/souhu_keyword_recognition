@@ -301,7 +301,7 @@ class PostProcessTool():
                 fuse_dic = sum_dic
                 for id, v in tqdm(fuse_dic.items()):
                     if raw_data_is_train:
-                        core = [i[0] for i in [data[0] for data in souhu_dic[id].entity_mon]]
+                        core = [data[0] for data in souhu_dic[id].entity_mon]
                     else:
                         core = ["PAD" for _ in range(3)]
                     # title = input_dic[id]["title"]
