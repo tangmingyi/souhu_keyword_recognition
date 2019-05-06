@@ -1,0 +1,26 @@
+{
+  "bert_config_file": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_config.json",
+  "vocab_file": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\vocab.txt",
+  "init_checkpoint": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_model.ckpt",
+  "train_file": "data/raw_data/dev.txt",
+  "predict_file": "data/raw_data/test.txt",
+  "emotion_file": "data/res/result.txt",
+  "core_file": "data/res/all_core.txt",
+  "output_dir": "data/model/emotion_model",
+  "do_train": "Frue",
+  "do_predict": "True",
+  "reload_data": "True",
+  "do_lower_case": "True",
+  "max_seq_length": 512,
+  "max_query_length": 30,
+  "max_answer_length": 10,
+  "n_best_size":20,
+  "train_batch_size": 2,
+  "predict_batch_size": 8,
+  "learning_rate": 5e-5,
+  "num_train_epochs": 3.0,
+  "warmup_proportion": 0.1,
+  "save_checkpoints_steps":300,
+  "iterations_per_loop":1000
+
+}

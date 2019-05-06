@@ -3,10 +3,11 @@ import json
 import numpy as np
 import os
 import collections
+import random
 
 
 class souhu_data():
-    def __init__(self, data, istrain=True):
+    def __init__(self, data, istrain=True,max_query_length=-1):
         paten = re.compile(r"\n+")
         self.newsid = data["newsId"]
         self.title = data['title']
@@ -16,8 +17,42 @@ class souhu_data():
         if istrain:
             for dic in data['coreEntityEmotions']:
                 self.entity_mon.append((dic["entity"].strip(), dic["emotion"].strip()))
+        if max_query_length != -1 and istrain:
+            emotion2num = {"POS": 0, "NORM": 1, "NEG": 2}
+            if len(self.entity_mon) >3:
+                self.entity_mon = self.entity_mon[:3]
+            if len(self.entity_mon) <3:
+                for i in range(3-len(self.entity_mon)):
+                    self.entity_mon.append(self.entity_mon[random.randint(0,len(self.entity_mon)-1)])
+            self.core = [i[0] for i in self.entity_mon]
+            self.emotion = [i[1] for i in self.entity_mon]
+            self.emoiton = [emotion2num[emo] for emo in self.emotion]
+            self.core_mark = self._get_predict_label_mark(max_query_length)
 
 
+    def _get_predict_label_mark(self, max_query_length):
+        label = np.zeros(shape=(3, max_query_length))
+        end = -1
+        for i, res_i in enumerate(self.core):
+            if i >= 3:
+                break
+            start = end + 1  # end 指向@符号
+            end = start + len(res_i)
+            if end > max_query_length:
+                break
+            for j in range(start, end):
+                label[i][j] = 1
+        return label
+
+    def UpdateCoreAndCoremark(self,core,max_query_length):
+        if len(core) > 3:
+            core = core[:3]
+        if len(core) < 3:
+            for i in range(3 - len(core)):
+                core.append(core[random.randint(0, len(core) - 1)])
+        self.core = core
+        self.core_mark = self._get_predict_label_mark(max_query_length)
+        self.emotion = None
 
 class sub_res_data():
     def __init__(self, line, istrain, max_query_length):
@@ -91,15 +126,16 @@ class train_data():
         self.label_mark = label_mark
 
 
+
 class data_util():
     def __init__(self):
         self.souhu_data = {}
         self.sub_data = []
         self.train_data = []
 
-    def get_souhu_data(self, file_name, istrain):
+    def get_souhu_data(self, file_name, istrain,max_query_length=-1):
         for line in open(file_name, "r", encoding="utf-8"):
-            data = souhu_data(json.loads(line.strip()), istrain)
+            data = souhu_data(json.loads(line.strip()), istrain,max_query_length)
             self.souhu_data[data.newsid] = data
 
     def get_sub_res_data(self, file_name, istrain, max_query_length):
@@ -160,4 +196,11 @@ class Tool():
                     i += 1
                 wf.write(line)
             wf.close()
-
+    @staticmethod
+    def get_all_core(all_core_file):
+        all_core = {}
+        with open(all_core_file, "r", encoding="utf-8") as rf:
+            for line in rf:
+                temp = line.strip().split("\t")
+                all_core[temp[0]] = temp[1].split("*|||*")
+        return all_core
