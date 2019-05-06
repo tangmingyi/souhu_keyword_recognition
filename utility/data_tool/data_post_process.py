@@ -388,9 +388,12 @@ class PostProcessTool():
                         temp[1] = [j[1] for j in
                                    sorted(
                                        [(i, index) for index, i in enumerate([float(mm) for mm in temp[1].split(",")])],
-                                       key=lambda x: x[0], reverse=True)[:3]]
+                                       key=lambda x: x[0], reverse=True)[:1]]
                     else:
-                        temp[1] = tempa
+                        if len(tempa) <= 3:
+                            temp[1] = tempa
+                        else:
+                            temp[1] = tempa[0:3]
                     # try:
                     res_lt = [sub_res[temp[0]][i] for i in temp[1] if sub_res[temp[0]][i] != "[PAD]"]
                     wf.write(temp[0] + "\t" + "*|||*".join(res_lt) + "\n")
