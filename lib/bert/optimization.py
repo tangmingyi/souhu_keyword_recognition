@@ -22,8 +22,10 @@ import re
 import tensorflow as tf
 
 
-def create_optimizer(loss, init_lr, num_train_steps, num_warmup_steps, use_tpu=False, freeze=False):
-    """Creates an optimizer training op."""
+def create_optimizer(loss, init_lr, num_train_steps, num_warmup_steps, use_tpu=False, freeze=-1):
+    """Creates an optimizer training op.
+    freeze:是否冻结变量进行训练，-1不冻结变量，1~12表示要训练的层数，优先训练输出端
+    """
     global_step = tf.train.get_or_create_global_step()
 
     learning_rate = tf.constant(value=init_lr, shape=[], dtype=tf.float32)
@@ -66,25 +68,33 @@ def create_optimizer(loss, init_lr, num_train_steps, num_warmup_steps, use_tpu=F
 
     if use_tpu:
         optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
-    if freeze:
+    if freeze != -1:
+        assert freeze <= 12 ,"bert total lay number is 12 ,you only train less 12 layer."
+        temp_var = []
+        i = 11
+        for _ in range(12):
+            temp_var.append(tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_{}/".format(i)))
+            i -= 1
         match_lay = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES,scope="match_lay")
-        attention_layer_11_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_11")
-        attention_layer_10_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_10")
-        attention_layer_9_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_9")
-        attention_layer_8_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_8")
-        attention_layer_7_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_7")
-        attention_layer_6_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_6")
-        attention_layer_5_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_5")
-        attention_layer_4_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_4")
-        attention_layer_3_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_3")
-        attention_layer_2_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_2")
-        attention_layer_1_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_1/")
+        # attention_layer_11_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_11")
+        # attention_layer_10_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_10")
+        # attention_layer_9_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_9")
+        # attention_layer_8_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_8")
+        # attention_layer_7_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_7")
+        # attention_layer_6_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_6")
+        # attention_layer_5_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_5")
+        # attention_layer_4_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_4")
+        # attention_layer_3_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_3")
+        # attention_layer_2_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_2")
+        # attention_layer_1_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/encoder/layer_1/")
+
         # rnn_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="rnn_layer")
         full_connection_var = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="cls")
         # pooler = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES, scope="bert/pooler")
         tmy = tf.get_collection(key=tf.GraphKeys.TRAINABLE_VARIABLES,scope="tmy")
         tvars = list()
-        tvars.extend(attention_layer_11_var)
+        for i in range(freeze):
+            tvars.extend(temp_var[i])
         # tvars.extend(attention_layer_10_var)
         # tvars.extend(attention_layer_9_var)
         # tvars.extend(attention_layer_8_var)

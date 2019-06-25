@@ -413,7 +413,8 @@ def read_squad_examples(input_file, is_training):
                 continue
             input_data.append(one_input_data)
             # print(temp_rate)
-            # if indx == 20: break
+            if run_config["debug"] == 1:
+                if indx == 20: break
         # print(core_rate)
         # print("监督利用率：{}".format(sum(core_rate)/len(core_rate)))
         print("问题数据数：{}".format(i))
@@ -874,7 +875,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
             total_loss = (0.5 * start_loss + 0.5 * end_loss )
 
             train_op = optimization.create_optimizer(
-                total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu, True)
+                total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu, run_config["freeze"])
 
             output_spec = tf.estimator.EstimatorSpec(
                 mode=mode,

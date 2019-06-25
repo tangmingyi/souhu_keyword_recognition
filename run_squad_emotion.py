@@ -725,7 +725,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
             # total_loss = (0.5 * start_loss + 0.5 * end_loss )
 
             train_op = optimization.create_optimizer(
-                total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu, True)
+                total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu, run_config["freeze"])
 
             output_spec = tf.estimator.EstimatorSpec(
                 mode=mode,

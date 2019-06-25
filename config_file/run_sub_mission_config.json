@@ -1,7 +1,7 @@
 {
-  "bert_config_file": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_config.json",
-  "vocab_file": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\vocab.txt",
-  "init_checkpoint": "D:\\programing_data\\data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_model.ckpt",
+  "bert_config_file": "D:\\programing_data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_config.json",
+  "vocab_file": "D:\\programing_data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\vocab.txt",
+  "init_checkpoint": "D:\\programing_data\\bert_chinese_model\\chinese_L-12_H-768_A-12\\bert_model.ckpt",
   "train_file": "data/raw_data/train.txt",
   "predict_file": "data/raw_data/test.txt",
   "extract_key_work2test": "data/res/res_extract_keyword2test.txt",
@@ -12,6 +12,7 @@
   "do_predict": "True",
   "reload_data": "True",
   "do_lower_case": "True",
+  "freeze": 1,
   "max_seq_length": 512,
   "max_query_length": 80,
   "max_answer_length": 10,
