@@ -31,6 +31,7 @@ import tensorflow as tf
 import re
 import numpy as np
 from lib.bert.myhook import evalute_hook,train_hook
+from tensorflow.python import debug as tfdbg
 
 flags = tf.flags
 
@@ -1615,7 +1616,7 @@ def main(_):
             is_training=True,
             drop_remainder=True,
             batch="train_batch_size")
-        estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
+        estimator.train(input_fn=train_input_fn, max_steps=num_train_steps,hooks=[tfdbg.TensorBoardDebugHook(grpc_debug_server_addresses="localhost:11111")])
     # if True:
     #     # record_eval_arg = os.path.basename(eval_file)[-10].split("_")
     #
