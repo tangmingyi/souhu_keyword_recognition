@@ -1455,6 +1455,14 @@ def validate_flags_or_throw(bert_config):
             "(%d) + 3" % (FLAGS.max_seq_length, FLAGS.max_query_length))
 
 
+temp = tf.estimator.export.build_parsing_serving_input_receiver_fn({
+        "unique_ids": tf.FixedLenFeature([], tf.int64),
+        "input_ids": tf.FixedLenFeature([FLAGS.max_seq_length], tf.int64),
+        "input_mask": tf.FixedLenFeature([FLAGS.max_seq_length], tf.int64),
+        "segment_ids": tf.FixedLenFeature([FLAGS.max_seq_length], tf.int64),
+    })
+
+
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -1586,6 +1594,9 @@ def main(_):
                 "predict_batch_size": FLAGS.predict_batch_size},  # params可以传给mofel_fn和input_fn
         warm_start_from=None,
     )
+    if run_config["output_model"] == 1:
+        estimator.export_savedmodel(run_config["save_model"],temp,strip_default_attrs=True)
+        return 0
 
     if FLAGS.do_train:
         # We write to a temporary file to avoid storing very large constant tensors
