@@ -701,7 +701,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
 
             def compute_loss(logits, positions):
                 one_hot_positions = positions
-                log_probs = tf.nn.log_softmax(logits, axis=-1)  # todo 为什么使用logsoftmax()???
+                log_probs = tf.nn.log_softmax(logits, axis=-1)
                 loss = -tf.reduce_mean(
                     tf.reduce_sum(one_hot_positions * log_probs, axis=-1))
                 return loss
@@ -750,7 +750,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
         #     def compute_loss(logits, positions):
         #         one_hot_positions = tf.one_hot(
         #             positions, depth=seq_length, dtype=tf.float32)
-        #         log_probs = tf.nn.log_softmax(logits, axis=-1)  # todo 为什么使用logsoftmax()???
+        #         log_probs = tf.nn.log_softmax(logits, axis=-1)
         #         loss = -tf.reduce_mean(
         #             tf.reduce_sum(one_hot_positions * log_probs, axis=-1))
         #         return loss

@@ -30,7 +30,7 @@ import six
 import tensorflow as tf
 import re
 import numpy as np
-from lib.bert.myhook import evalute_hook,train_hook
+from lib.bert import myhook
 from tensorflow.python import debug as tfdbg
 
 flags = tf.flags
@@ -858,7 +858,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
             def compute_loss(logits, positions):
                 one_hot_positions = tf.one_hot(
                     positions, depth=seq_length, dtype=tf.float32)
-                log_probs = tf.nn.log_softmax(logits, axis=-1)  # todo 为什么使用logsoftmax()???
+                log_probs = tf.nn.log_softmax(logits, axis=-1)
                 loss = -tf.reduce_mean(
                     tf.reduce_sum(one_hot_positions * log_probs, axis=-1))
                 return loss
@@ -896,7 +896,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
         #     def compute_loss(logits, positions):
         #         one_hot_positions = tf.one_hot(
         #             positions, depth=seq_length, dtype=tf.float32)
-        #         log_probs = tf.nn.log_softmax(logits, axis=-1)  # todo 为什么使用logsoftmax()???
+        #         log_probs = tf.nn.log_softmax(logits, axis=-1)
         #         loss = -tf.reduce_mean(
         #             tf.reduce_sum(one_hot_positions * log_probs, axis=-1))
         #         return loss
@@ -1616,7 +1616,7 @@ def main(_):
             is_training=True,
             drop_remainder=True,
             batch="train_batch_size")
-        estimator.train(input_fn=train_input_fn, max_steps=num_train_steps,hooks=[tfdbg.TensorBoardDebugHook(grpc_debug_server_addresses="localhost:11111")])
+        estimator.train(input_fn=train_input_fn, max_steps=num_train_steps,hooks=[tfdbg.TensorBoardDebugHook(grpc_debug_server_addresses="localhost:11111"),myhook.timeline_hook(with_one_timeline=True)])
     # if True:
     #     # record_eval_arg = os.path.basename(eval_file)[-10].split("_")
     #
